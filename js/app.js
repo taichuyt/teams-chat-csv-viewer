@@ -8,8 +8,8 @@
     const chatHeader = document.getElementById('chatHeader');
     const chatTitle = document.getElementById('chatTitle');
     const chatContainer = document.getElementById('chatContainer');
-
     const themeToggle = document.getElementById('themeToggle');
+    const loadingIndicator = document.getElementById('loadingIndicator');
 
     // State
     let parsedMessages = [];
@@ -24,9 +24,14 @@
     function parseCSV(text) {
         const lines = [];
         let currentLine = [];
-        let currentField = '';
+        const fieldChars = [];
         let inQuotes = false;
         let i = 0;
+
+        function flushField() {
+            currentLine.push(fieldChars.join(''));
+            fieldChars.length = 0;
+        }
 
         while (i < text.length) {
             const char = text[i];
@@ -35,41 +40,38 @@
             if (inQuotes) {
                 if (char === '"') {
                     if (nextChar === '"') {
-                        currentField += '"';
+                        fieldChars.push('"');
                         i += 2;
                         continue;
                     } else {
                         inQuotes = false;
                     }
                 } else {
-                    currentField += char;
+                    fieldChars.push(char);
                 }
             } else {
                 if (char === '"') {
                     inQuotes = true;
                 } else if (char === ',') {
-                    currentLine.push(currentField);
-                    currentField = '';
+                    flushField();
                 } else if (char === '\r' && nextChar === '\n') {
-                    currentLine.push(currentField);
+                    flushField();
                     lines.push(currentLine);
                     currentLine = [];
-                    currentField = '';
                     i++; // skip \n
                 } else if (char === '\n' || char === '\r') {
-                    currentLine.push(currentField);
+                    flushField();
                     lines.push(currentLine);
                     currentLine = [];
-                    currentField = '';
                 } else {
-                    currentField += char;
+                    fieldChars.push(char);
                 }
             }
             i++;
         }
 
-        // Push remaining
-        currentLine.push(currentField);
+        // Flush remaining field
+        flushField();
         if (currentLine.length > 1 || (currentLine.length === 1 && currentLine[0] !== '')) {
             lines.push(currentLine);
         }
@@ -121,16 +123,22 @@
 
     /**
      * Render a single message element.
+     * @param {Object} message
+     * @param {Object|null} prevMessage - previous message for consecutive detection
      */
-    function createMessageElement(message) {
+    function createMessageElement(message, prevMessage) {
         const from = message.From || 'Unknown';
         const content = message.Content || '';
         const dateTime = message.DateTime || '';
         const attachments = message.Attachments || '';
         const isOwn = from === currentSelf;
+        const isConsecutive = prevMessage && prevMessage.From === from;
 
         const msgDiv = document.createElement('div');
         msgDiv.className = 'message ' + (isOwn ? 'own' : 'other');
+        if (isConsecutive) {
+            msgDiv.setAttribute('data-consecutive', 'true');
+        }
 
         const senderDiv = document.createElement('div');
         senderDiv.className = 'message-sender';
@@ -195,13 +203,18 @@
             return;
         }
 
+        // Mark body as loaded to suppress entry animations on subsequent renders
+        document.body.classList.add('loaded');
+
         // Small file: render all at once with DocumentFragment for fewer reflows
         if (parsedMessages.length <= 500) {
             const fragment = document.createDocumentFragment();
-            for (const message of parsedMessages) {
-                fragment.appendChild(createMessageElement(message));
+            for (let i = 0; i < parsedMessages.length; i++) {
+                const prev = i > 0 ? parsedMessages[i - 1] : null;
+                fragment.appendChild(createMessageElement(parsedMessages[i], prev));
             }
             chatContainer.appendChild(fragment);
+            finishRender();
             return;
         }
 
@@ -213,16 +226,30 @@
             const fragment = document.createDocumentFragment();
             const end = Math.min(index + CHUNK_SIZE, parsedMessages.length);
             for (; index < end; index++) {
-                fragment.appendChild(createMessageElement(parsedMessages[index]));
+                const prev = index > 0 ? parsedMessages[index - 1] : null;
+                fragment.appendChild(createMessageElement(parsedMessages[index], prev));
             }
             chatContainer.appendChild(fragment);
 
             if (index < parsedMessages.length) {
                 requestAnimationFrame(renderChunk);
+            } else {
+                finishRender();
             }
         }
 
         renderChunk();
+    }
+
+    /**
+     * Finish rendering: hide loading and move focus for accessibility.
+     */
+    function finishRender() {
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'none';
+        }
+        chatContainer.setAttribute('tabindex', '-1');
+        chatContainer.focus({ preventScroll: true });
     }
 
     /**
@@ -245,6 +272,11 @@
         if (!file) return;
 
         currentFileName = file.name.replace(/\.csv$/i, '');
+
+        // Show loading indicator
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'flex';
+        }
 
         try {
             let text = await readFileAsText(file);
@@ -269,9 +301,12 @@
             currentSelf = '';
             selfSelect.value = '';
 
-            // Render
+            // Render (loading will be hidden inside finishRender)
             renderMessages();
         } catch (err) {
+            if (loadingIndicator) {
+                loadingIndicator.style.display = 'none';
+            }
             alert('CSVファイルの読み込みに失敗しました: ' + err.message);
             console.error(err);
         }
