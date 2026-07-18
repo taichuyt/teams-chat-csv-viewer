@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teams Chat Viewer</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="chat-header" id="chatHeader" style="display: none;">
+            <h1 id="chatTitle"></h1>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="empty-state">
+                <p>CSVファイルを選択してください</p>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="csvFile">CSVファイル:</label>
+                <input type="file" id="csvFile" accept=".csv">
+            </div>
+            <div class="control-group" id="selfSelectorGroup" style="display: none;">
+                <label for="selfSelect">自分:</label>
+                <select id="selfSelect">
+                    <option value="">-- 選択 --</option>
+                </select>
+            </div>
+            <button class="btn-theme" id="themeToggle" title="テーマ切り替え">☀️</button>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
