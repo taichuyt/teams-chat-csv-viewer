@@ -10,6 +10,7 @@
     const chatContainer = document.getElementById('chatContainer');
     const themeToggle = document.getElementById('themeToggle');
     const loadingIndicator = document.getElementById('loadingIndicator');
+    const ariaStatus = document.getElementById('ariaStatus');
 
     // State
     let parsedMessages = [];
@@ -176,12 +177,13 @@
      *   - Diff-update when only self-selection changed (same message count)
      *   - DocumentFragment batching for fewer reflows
      *   - Chunked rendering via requestAnimationFrame for >500 messages
+     * @param {boolean} forceFullRender - skip diff update and always do full render
      */
-    function renderMessages() {
+    function renderMessages(forceFullRender) {
         const existing = chatContainer.querySelectorAll('.message');
 
         // Fast path: if message count hasn't changed, only toggle own/other classes
-        if (existing.length > 0 && existing.length === parsedMessages.length) {
+        if (!forceFullRender && existing.length > 0 && existing.length === parsedMessages.length) {
             let changed = false;
             existing.forEach((el, i) => {
                 const shouldOwn = parsedMessages[i].From === currentSelf;
@@ -242,11 +244,14 @@
     }
 
     /**
-     * Finish rendering: hide loading and move focus for accessibility.
+     * Finish rendering: hide loading, announce status, and move focus for accessibility.
      */
     function finishRender() {
         if (loadingIndicator) {
             loadingIndicator.style.display = 'none';
+        }
+        if (ariaStatus) {
+            ariaStatus.textContent = 'チャットログを ' + parsedMessages.length + ' 件読み込みました。';
         }
         chatContainer.setAttribute('tabindex', '-1');
         chatContainer.focus({ preventScroll: true });
@@ -302,7 +307,7 @@
             selfSelect.value = '';
 
             // Render (loading will be hidden inside finishRender)
-            renderMessages();
+            renderMessages(true);
         } catch (err) {
             if (loadingIndicator) {
                 loadingIndicator.style.display = 'none';
