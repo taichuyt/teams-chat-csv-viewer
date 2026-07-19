@@ -290,8 +290,10 @@
                 text = text.slice(1);
             }
             parsedMessages = parseCSV(text);
-            // Reverse so oldest messages appear at the top (past → future, top → bottom)
-            parsedMessages.reverse();
+            // Sort by DateTime so oldest messages appear at the top (past → future, top → bottom)
+            parsedMessages.sort(function (a, b) {
+                return new Date(a.DateTime) - new Date(b.DateTime);
+            });
 
             // Update header
             chatTitle.textContent = currentFileName;
