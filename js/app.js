@@ -201,7 +201,7 @@
         chatContainer.innerHTML = '';
 
         if (parsedMessages.length === 0) {
-            chatContainer.innerHTML = '<div class="empty-state"><p>CSVファイルを選択してください</p></div>';
+            chatContainer.innerHTML = '<div class="empty-state"><p>CSVファイルを選択またはドラッグ＆ドロップしてください</p></div>';
             return;
         }
 
@@ -270,10 +270,9 @@
     }
 
     /**
-     * Handle CSV file selection.
+     * Process a CSV File object (used by both file input and drag-and-drop).
      */
-    async function handleFileSelect(event) {
-        const file = event.target.files[0];
+    async function processFile(file) {
         if (!file) return;
 
         currentFileName = file.name.replace(/\.csv$/i, '');
@@ -316,6 +315,43 @@
             }
             alert('CSVファイルの読み込みに失敗しました: ' + err.message);
             console.error(err);
+        }
+    }
+
+    /**
+     * Handle CSV file selection.
+     */
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        processFile(file);
+    }
+
+    /**
+     * Handle drag-and-drop events on the chat container.
+     */
+    function handleDragOver(event) {
+        event.preventDefault();
+        chatContainer.classList.add('drag-over');
+    }
+
+    function handleDragLeave(event) {
+        chatContainer.classList.remove('drag-over');
+    }
+
+    function handleDrop(event) {
+        event.preventDefault();
+        chatContainer.classList.remove('drag-over');
+
+        const file = event.dataTransfer.files[0];
+        if (file && file.name.toLowerCase().endsWith('.csv')) {
+            processFile(file);
+            if (ariaStatus) {
+                ariaStatus.textContent = 'CSVファイル ' + file.name + ' をドロップしました。';
+            }
+        } else {
+            if (ariaStatus) {
+                ariaStatus.textContent = 'CSVファイル以外はドロップできません。';
+            }
         }
     }
 
@@ -371,6 +407,10 @@
     csvFileInput.addEventListener('change', handleFileSelect);
     selfSelect.addEventListener('change', handleSelfChange);
     themeToggle.addEventListener('click', handleThemeToggle);
+
+    chatContainer.addEventListener('dragover', handleDragOver);
+    chatContainer.addEventListener('dragleave', handleDragLeave);
+    chatContainer.addEventListener('drop', handleDrop);
 
     initTheme();
 })();

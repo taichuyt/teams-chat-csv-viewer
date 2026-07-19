@@ -214,6 +214,14 @@ input[type="file"]:focus-visible {
     gap: 16px;
 }
 
+/* Drag-and-drop visual feedback */
+.chat-container.drag-over {
+    background-color: var(--accent-bg);
+    outline: 2px dashed var(--accent);
+    outline-offset: -12px;
+    border-radius: 4px;
+}
+
 .empty-state {
     display: flex;
     align-items: center;
