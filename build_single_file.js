@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Build script: bundles index.html, css/style.css, and js/app.js
- * into a single standalone HTML file: TeamsChat_CSV_Viewer.html
+ * into a single standalone HTML file: teams-chat-csv-viewer.html
  *
  * Usage:
  *   node build_single_file.js
@@ -13,7 +13,7 @@ const path = require('path');
 const SOURCE_HTML = 'index.html';
 const SOURCE_CSS = 'css/style.css';
 const SOURCE_JS = 'js/app.js';
-const OUTPUT = 'TeamsChat_CSV_Viewer.html';
+const OUTPUT = 'teams-chat-csv-viewer.html';
 
 function main() {
     // Read source files
