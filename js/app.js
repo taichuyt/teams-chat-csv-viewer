@@ -141,9 +141,19 @@
             msgDiv.setAttribute('data-consecutive', 'true');
         }
 
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'message-header';
+
         const senderDiv = document.createElement('div');
         senderDiv.className = 'message-sender';
         senderDiv.textContent = from;
+
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'message-time';
+        timeSpan.textContent = dateTime;
+
+        headerDiv.appendChild(senderDiv);
+        headerDiv.appendChild(timeSpan);
 
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
@@ -152,11 +162,6 @@
         const metaDiv = document.createElement('div');
         metaDiv.className = 'message-meta';
 
-        const timeSpan = document.createElement('span');
-        timeSpan.className = 'message-time';
-        timeSpan.textContent = dateTime;
-        metaDiv.appendChild(timeSpan);
-
         if (attachments.trim()) {
             const attachSpan = document.createElement('span');
             attachSpan.className = 'message-attachments';
@@ -164,9 +169,11 @@
             metaDiv.appendChild(attachSpan);
         }
 
-        msgDiv.appendChild(senderDiv);
+        msgDiv.appendChild(headerDiv);
         msgDiv.appendChild(contentDiv);
-        msgDiv.appendChild(metaDiv);
+        if (metaDiv.hasChildNodes()) {
+            msgDiv.appendChild(metaDiv);
+        }
 
         return msgDiv;
     }

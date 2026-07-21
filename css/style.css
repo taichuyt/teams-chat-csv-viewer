@@ -274,12 +274,18 @@ input[type="file"]:focus-visible {
     align-items: flex-start;
 }
 
+.message-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+    padding: 0 4px;
+}
+
 .message-sender {
     font-size: 12px;
     font-weight: 600;
     color: var(--accent);
-    margin-bottom: 2px;
-    padding: 0 4px;
 }
 
 .message.own .message-sender {
