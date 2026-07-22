@@ -330,9 +330,21 @@ input[type="file"]:focus-visible {
 .message-attachments {
     font-size: 11px;
     color: var(--accent);
-    background-color: var(--accent-bg);
+    background-color: inherit;
     padding: 2px 8px;
     border-radius: 10px;
+    text-decoration: none;
+}
+
+.message-attachments:hover {
+    text-decoration: underline;
+}
+
+/* Links inside message content */
+.content-link {
+    color: var(--accent);
+    text-decoration: underline;
+    word-break: break-all;
 }
 
 /* Respect user's motion preferences */

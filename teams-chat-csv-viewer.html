@@ -337,9 +337,21 @@ input[type="file"]:focus-visible {
 .message-attachments {
     font-size: 11px;
     color: var(--accent);
-    background-color: var(--accent-bg);
+    background-color: inherit;
     padding: 2px 8px;
     border-radius: 10px;
+    text-decoration: none;
+}
+
+.message-attachments:hover {
+    text-decoration: underline;
+}
+
+/* Links inside message content */
+.content-link {
+    color: var(--accent);
+    text-decoration: underline;
+    word-break: break-all;
 }
 
 /* Respect user's motion preferences */
@@ -540,6 +552,78 @@ input[type="file"]:focus-visible {
     }
 
     /**
+     * Populate a container with text nodes and clickable links.
+     * URLs are parsed; link text is the decoded filename portion.
+     */
+    function appendContentWithLinks(container, text) {
+        // Match URLs, but stop at closing brackets commonly used as delimiters
+        const urlRegex = /(https?:\/\/[^\s)\]}>]+)/g;
+        let lastIndex = 0;
+        let match;
+        let found = false;
+
+        while ((match = urlRegex.exec(text)) !== null) {
+            found = true;
+            const fullMatch = match[0];
+            let url = fullMatch;
+
+            // Strip trailing punctuation
+            while (url.length > 0 && '.,;:!?'.includes(url[url.length - 1])) {
+                url = url.slice(0, -1);
+            }
+
+            // Check for unbalanced parentheses and restore ')' if needed
+            let parenCount = 0;
+            for (let i = 0; i < url.length; i++) {
+                if (url[i] === '(') parenCount++;
+                else if (url[i] === ')') parenCount--;
+            }
+
+            let restoredChars = '';
+            if (parenCount > 0) {
+                let pos = match.index + fullMatch.length;
+                while (parenCount > 0 && pos < text.length && text[pos] === ')') {
+                    restoredChars += ')';
+                    url += ')';
+                    parenCount--;
+                    pos++;
+                }
+            }
+
+            if (match.index > lastIndex) {
+                container.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+            }
+
+            let rawFileName = url.substring(url.lastIndexOf('/') + 1);
+            if (!rawFileName) {
+                const trimmed = url.replace(/\/+$/, '');
+                rawFileName = trimmed.substring(trimmed.lastIndexOf('/') + 1) || trimmed;
+            }
+            let decodedFileName;
+            try {
+                decodedFileName = decodeURIComponent(rawFileName);
+            } catch (_e) {
+                decodedFileName = rawFileName;
+            }
+            const a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.className = 'content-link';
+            a.textContent = decodedFileName;
+            container.appendChild(a);
+
+            lastIndex = match.index + fullMatch.length + restoredChars.length;
+        }
+
+        if (!found) {
+            container.textContent = text;
+        } else if (lastIndex < text.length) {
+            container.appendChild(document.createTextNode(text.slice(lastIndex)));
+        }
+    }
+
+    /**
      * Render a single message element.
      * @param {Object} message
      * @param {Object|null} prevMessage - previous message for consecutive detection
@@ -574,16 +658,28 @@ input[type="file"]:focus-visible {
 
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
-        contentDiv.textContent = content;
+        appendContentWithLinks(contentDiv, content);
 
         const metaDiv = document.createElement('div');
         metaDiv.className = 'message-meta';
 
         if (attachments.trim()) {
-            const attachSpan = document.createElement('span');
-            attachSpan.className = 'message-attachments';
-            attachSpan.textContent = '📎 ' + attachments;
-            metaDiv.appendChild(attachSpan);
+            const rawUrl = attachments.trim();
+            const rawFileName = rawUrl.substring(rawUrl.lastIndexOf('/') + 1);
+            let decodedFileName;
+            try {
+                decodedFileName = decodeURIComponent(rawFileName);
+            } catch (_e) {
+                decodedFileName = rawFileName;
+            }
+
+            const attachLink = document.createElement('a');
+            attachLink.className = 'message-attachments';
+            attachLink.href = rawUrl;
+            attachLink.target = '_blank';
+            attachLink.rel = 'noopener noreferrer';
+            attachLink.textContent = '📎 ' + decodedFileName;
+            metaDiv.appendChild(attachLink);
         }
 
         msgDiv.appendChild(headerDiv);
