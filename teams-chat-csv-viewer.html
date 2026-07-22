@@ -321,14 +321,6 @@ input[type="file"]:focus-visible {
     box-shadow: 0 1px 2px var(--shadow);
 }
 
-.message-meta {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 2px;
-    padding: 0 4px;
-}
-
 .message-time {
     font-size: 11px;
     color: var(--text-secondary);
@@ -341,6 +333,9 @@ input[type="file"]:focus-visible {
     padding: 2px 8px;
     border-radius: 10px;
     text-decoration: none;
+    display: block;
+    text-align: left;
+    margin-top: 4px;
 }
 
 .message-attachments:hover {
@@ -660,9 +655,6 @@ input[type="file"]:focus-visible {
         contentDiv.className = 'message-content';
         appendContentWithLinks(contentDiv, content);
 
-        const metaDiv = document.createElement('div');
-        metaDiv.className = 'message-meta';
-
         if (attachments.trim()) {
             const rawUrl = attachments.trim();
             const rawFileName = rawUrl.substring(rawUrl.lastIndexOf('/') + 1);
@@ -678,15 +670,17 @@ input[type="file"]:focus-visible {
             attachLink.href = rawUrl;
             attachLink.target = '_blank';
             attachLink.rel = 'noopener noreferrer';
+            attachLink.title = rawUrl;
             attachLink.textContent = '📎 ' + decodedFileName;
-            metaDiv.appendChild(attachLink);
+
+            if (content.trim()) {
+                contentDiv.appendChild(document.createElement('br'));
+            }
+            contentDiv.appendChild(attachLink);
         }
 
         msgDiv.appendChild(headerDiv);
         msgDiv.appendChild(contentDiv);
-        if (metaDiv.hasChildNodes()) {
-            msgDiv.appendChild(metaDiv);
-        }
 
         return msgDiv;
     }

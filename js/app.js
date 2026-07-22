@@ -231,9 +231,6 @@
         contentDiv.className = 'message-content';
         appendContentWithLinks(contentDiv, content);
 
-        const metaDiv = document.createElement('div');
-        metaDiv.className = 'message-meta';
-
         if (attachments.trim()) {
             const rawUrl = attachments.trim();
             const rawFileName = rawUrl.substring(rawUrl.lastIndexOf('/') + 1);
@@ -249,15 +246,17 @@
             attachLink.href = rawUrl;
             attachLink.target = '_blank';
             attachLink.rel = 'noopener noreferrer';
+            attachLink.title = rawUrl;
             attachLink.textContent = '📎 ' + decodedFileName;
-            metaDiv.appendChild(attachLink);
+
+            if (content.trim()) {
+                contentDiv.appendChild(document.createElement('br'));
+            }
+            contentDiv.appendChild(attachLink);
         }
 
         msgDiv.appendChild(headerDiv);
         msgDiv.appendChild(contentDiv);
-        if (metaDiv.hasChildNodes()) {
-            msgDiv.appendChild(metaDiv);
-        }
 
         return msgDiv;
     }
