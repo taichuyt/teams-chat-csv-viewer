@@ -16,7 +16,15 @@
     let parsedMessages = [];
     let currentSelf = '';
     let currentFileName = '';
-    let isDark = false;
+    let currentTheme = 'light';
+
+    // Theme definitions
+    const THEMES = ['light', 'dark', 'high-contrast'];
+    const THEME_ICONS = {
+        light: '☀️',
+        dark: '🌙',
+        'high-contrast': '🔳'
+    };
 
     /**
      * Parse CSV text (RFC 4180 compliant)
@@ -456,17 +464,18 @@
     /**
      * Theme toggle logic.
      */
-    function applyTheme(dark) {
-        isDark = dark;
-        if (isDark) {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            themeToggle.textContent = '🌙';
-        } else {
-            document.documentElement.removeAttribute('data-theme');
-            themeToggle.textContent = '☀️';
+    function applyTheme(theme) {
+        if (!THEMES.includes(theme)) {
+            console.warn('Invalid theme:', theme);
+            theme = 'light';
+        }
+        currentTheme = theme;
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        if (themeToggle) {
+            themeToggle.textContent = THEME_ICONS[currentTheme];
         }
         try {
-            localStorage.setItem('teamsChatTheme', isDark ? 'dark' : 'light');
+            localStorage.setItem('teamsChatTheme', currentTheme);
         } catch (_e) {
             // ignore (e.g. private mode where localStorage is disabled)
         }
@@ -479,18 +488,20 @@
         } catch (_e) {
             saved = null;
         }
-        if (saved === 'dark') {
-            applyTheme(true);
-        } else if (saved === 'light') {
-            applyTheme(false);
+        if (THEMES.includes(saved)) {
+            applyTheme(saved);
+        } else if (window.matchMedia && window.matchMedia('(forced-colors: active)').matches) {
+            applyTheme('high-contrast');
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            applyTheme('dark');
         } else {
-            // Default to system preference
-            applyTheme(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            applyTheme('light');
         }
     }
 
     function handleThemeToggle() {
-        applyTheme(!isDark);
+        const nextIndex = (THEMES.indexOf(currentTheme) + 1) % THEMES.length;
+        applyTheme(THEMES[nextIndex]);
     }
 
     // Event listeners

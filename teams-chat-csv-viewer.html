@@ -38,6 +38,24 @@
     --shadow-soft: rgba(0, 0, 0, 0.04);
 }
 
+[data-theme="light"] {
+    /* Light Theme override — ensures explicit light setting works */
+    --bg-app: #f5f5f5;
+    --bg-surface: #ffffff;
+    --bg-surface-alt: #f3f2f1;
+    --border-color: #e1dfdd;
+    --text-primary: #252424;
+    --text-secondary: #616161;
+    --accent: #6264a7;
+    --accent-bg: rgba(98, 100, 167, 0.1);
+    --own-bubble: #e5e5f1;
+    --own-bubble-text: #252424;
+    --other-bubble: #ffffff;
+    --other-bubble-text: #252424;
+    --shadow: rgba(0, 0, 0, 0.08);
+    --shadow-soft: rgba(0, 0, 0, 0.04);
+}
+
 [data-theme="dark"] {
     /* Dark Theme (Teams dark mode inspired) */
     --bg-app: #1f1f1f;
@@ -54,6 +72,24 @@
     --other-bubble-text: #ffffff;
     --shadow: rgba(0, 0, 0, 0.2);
     --shadow-soft: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="high-contrast"] {
+    /* High Contrast Theme (Teams HC Black) */
+    --bg-app: #000000;
+    --bg-surface: #000000;
+    --bg-surface-alt: #000000;
+    --border-color: #ffffff;
+    --text-primary: #ffffff;
+    --text-secondary: #ffffff;
+    --accent: #ffff00;
+    --accent-bg: rgba(255, 255, 0, 0.2);
+    --own-bubble: #000000;
+    --own-bubble-text: #ffffff;
+    --other-bubble: #000000;
+    --other-bubble-text: #ffffff;
+    --shadow: rgba(255, 255, 255, 0.0);
+    --shadow-soft: rgba(255, 255, 255, 0.0);
 }
 
 * {
@@ -163,7 +199,11 @@ input[type="file"]:focus-visible {
     color: var(--text-primary);
 }
 
-/* Chat Header */
+[data-theme="high-contrast"] .btn-theme:hover {
+    background-color: var(--text-primary);
+    color: var(--bg-app);
+    outline: 2px solid var(--text-primary);
+}
 .chat-header {
     background-color: var(--bg-surface-alt);
     padding: 20px 24px;
@@ -321,6 +361,10 @@ input[type="file"]:focus-visible {
     box-shadow: 0 1px 2px var(--shadow);
 }
 
+[data-theme="high-contrast"] .message-content {
+    border: 1px solid var(--border-color);
+}
+
 .message-time {
     font-size: 11px;
     color: var(--text-secondary);
@@ -417,7 +461,7 @@ input[type="file"]:focus-visible {
                     <option value="">-- 選択 --</option>
                 </select>
             </div>
-            <button class="btn-theme" id="themeToggle" title="テーマ切り替え" aria-label="ライトテーマとダークテーマを切り替え">☀️</button>
+            <button class="btn-theme" id="themeToggle" title="テーマ切り替え" aria-label="ライト、ダーク、ハイコントラストのテーマを切り替え">☀️</button>
         </div>
     </div>
 
@@ -440,7 +484,15 @@ input[type="file"]:focus-visible {
     let parsedMessages = [];
     let currentSelf = '';
     let currentFileName = '';
-    let isDark = false;
+    let currentTheme = 'light';
+
+    // Theme definitions
+    const THEMES = ['light', 'dark', 'high-contrast'];
+    const THEME_ICONS = {
+        light: '☀️',
+        dark: '🌙',
+        'high-contrast': '🔳'
+    };
 
     /**
      * Parse CSV text (RFC 4180 compliant)
@@ -880,17 +932,18 @@ input[type="file"]:focus-visible {
     /**
      * Theme toggle logic.
      */
-    function applyTheme(dark) {
-        isDark = dark;
-        if (isDark) {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            themeToggle.textContent = '🌙';
-        } else {
-            document.documentElement.removeAttribute('data-theme');
-            themeToggle.textContent = '☀️';
+    function applyTheme(theme) {
+        if (!THEMES.includes(theme)) {
+            console.warn('Invalid theme:', theme);
+            theme = 'light';
+        }
+        currentTheme = theme;
+        document.documentElement.setAttribute('data-theme', currentTheme);
+        if (themeToggle) {
+            themeToggle.textContent = THEME_ICONS[currentTheme];
         }
         try {
-            localStorage.setItem('teamsChatTheme', isDark ? 'dark' : 'light');
+            localStorage.setItem('teamsChatTheme', currentTheme);
         } catch (_e) {
             // ignore (e.g. private mode where localStorage is disabled)
         }
@@ -903,18 +956,20 @@ input[type="file"]:focus-visible {
         } catch (_e) {
             saved = null;
         }
-        if (saved === 'dark') {
-            applyTheme(true);
-        } else if (saved === 'light') {
-            applyTheme(false);
+        if (THEMES.includes(saved)) {
+            applyTheme(saved);
+        } else if (window.matchMedia && window.matchMedia('(forced-colors: active)').matches) {
+            applyTheme('high-contrast');
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            applyTheme('dark');
         } else {
-            // Default to system preference
-            applyTheme(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            applyTheme('light');
         }
     }
 
     function handleThemeToggle() {
-        applyTheme(!isDark);
+        const nextIndex = (THEMES.indexOf(currentTheme) + 1) % THEMES.length;
+        applyTheme(THEMES[nextIndex]);
     }
 
     // Event listeners
