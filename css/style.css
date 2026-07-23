@@ -31,6 +31,24 @@
     --shadow-soft: rgba(0, 0, 0, 0.04);
 }
 
+[data-theme="light"] {
+    /* Light Theme override — ensures explicit light setting works */
+    --bg-app: #f5f5f5;
+    --bg-surface: #ffffff;
+    --bg-surface-alt: #f3f2f1;
+    --border-color: #e1dfdd;
+    --text-primary: #252424;
+    --text-secondary: #616161;
+    --accent: #6264a7;
+    --accent-bg: rgba(98, 100, 167, 0.1);
+    --own-bubble: #e5e5f1;
+    --own-bubble-text: #252424;
+    --other-bubble: #ffffff;
+    --other-bubble-text: #252424;
+    --shadow: rgba(0, 0, 0, 0.08);
+    --shadow-soft: rgba(0, 0, 0, 0.04);
+}
+
 [data-theme="dark"] {
     /* Dark Theme (Teams dark mode inspired) */
     --bg-app: #1f1f1f;
@@ -47,6 +65,24 @@
     --other-bubble-text: #ffffff;
     --shadow: rgba(0, 0, 0, 0.2);
     --shadow-soft: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="high-contrast"] {
+    /* High Contrast Theme (Teams HC Black) */
+    --bg-app: #000000;
+    --bg-surface: #000000;
+    --bg-surface-alt: #000000;
+    --border-color: #ffffff;
+    --text-primary: #ffffff;
+    --text-secondary: #ffffff;
+    --accent: #ffff00;
+    --accent-bg: rgba(255, 255, 0, 0.2);
+    --own-bubble: #000000;
+    --own-bubble-text: #ffffff;
+    --other-bubble: #000000;
+    --other-bubble-text: #ffffff;
+    --shadow: rgba(255, 255, 255, 0.0);
+    --shadow-soft: rgba(255, 255, 255, 0.0);
 }
 
 * {
@@ -156,7 +192,11 @@ input[type="file"]:focus-visible {
     color: var(--text-primary);
 }
 
-/* Chat Header */
+[data-theme="high-contrast"] .btn-theme:hover {
+    background-color: var(--text-primary);
+    color: var(--bg-app);
+    outline: 2px solid var(--text-primary);
+}
 .chat-header {
     background-color: var(--bg-surface-alt);
     padding: 20px 24px;
@@ -312,6 +352,10 @@ input[type="file"]:focus-visible {
     color: var(--other-bubble-text);
     border-bottom-left-radius: 2px;
     box-shadow: 0 1px 2px var(--shadow);
+}
+
+[data-theme="high-contrast"] .message-content {
+    border: 1px solid var(--border-color);
 }
 
 .message-time {
